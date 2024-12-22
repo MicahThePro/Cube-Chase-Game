@@ -1,0 +1,16 @@
+{
+  "name": "cube-chase-game",
+  "version": "1.0.0",
+  "description": "A simulator game where the player controls a red cube to reach light-up spots within a time limit.",
+  "main": "src/js/game.js",
+  "scripts": {
+    "start": "live-server src",
+    "build": "echo 'No build step required.'"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "live-server": "^1.2.1"
+  },
+  "author": "",
+  "license": "ISC"
+}

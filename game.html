@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cube Chase Game</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #gameArea {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: #f0f0f0;
+        }
+        #player {
+            width: 20px;
+            height: 20px;
+            background-color: red;
+            position: absolute;
+            display: none;
+        }
+        #target {
+            width: 20px;
+            height: 20px;
+            background-color: yellow;
+            position: absolute;
+            display: none;
+        }
+        #info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #startButtonContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99;
+        }
+        #startButton {
+            padding: 15px 30px;
+            font-size: 24px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        #startButton:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        Level: <span id="level">1</span>
+        Time: <span id="timer">10.0</span>
+    </div>
+    <div id="startButtonContainer">
+        <button id="startButton" onclick="startGame()">Start Game</button>
+    </div>
+    <div id="gameArea">
+        <div id="player"></div>
+        <div id="target"></div>
+    </div>
+
+    <script>
+        let player = document.getElementById('player');
+        let target = document.getElementById('target');
+        let timerDisplay = document.getElementById('timer');
+        let levelDisplay = document.getElementById('level');
+        let startButton = document.getElementById('startButton');
+        let timer;
+        let currentLevel = 1;
+        let playerX = 0;
+        let playerY = 0;
+        let velocityX = 0;
+        let velocityY = 0;
+        const SPEED = 0.25;
+        const FRICTION = 0.88;
+        const MAX_SPEED = 4;
+        let keys = {};
+
+        function startGame() {
+            currentLevel = 1;
+            levelDisplay.textContent = currentLevel;
+            startButton.parentElement.style.display = 'none';
+            
+            playerX = (window.innerWidth - 20) / 2;
+            playerY = (window.innerHeight - 20) / 2;
+            player.style.left = playerX + 'px';
+            player.style.top = playerY + 'px';
+            player.style.display = 'block';
+            
+            velocityX = 0;
+            velocityY = 0;
+            spawnTarget();
+            setupControls();
+            gameLoop();
+        }
+
+        function gameLoop() {
+            updatePlayerPosition();
+            checkCollision();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function updatePlayerPosition() {
+            if (keys['ArrowLeft']) velocityX -= SPEED;
+            if (keys['ArrowRight']) velocityX += SPEED;
+            if (keys['ArrowUp']) velocityY -= SPEED;
+            if (keys['ArrowDown']) velocityY += SPEED;
+
+            velocityX *= FRICTION;
+            velocityY *= FRICTION;
+
+            velocityX = Math.max(Math.min(velocityX, MAX_SPEED), -MAX_SPEED);
+            velocityY = Math.max(Math.min(velocityY, MAX_SPEED), -MAX_SPEED);
+
+            playerX += velocityX;
+            playerY += velocityY;
+
+            playerX = Math.max(0, Math.min(window.innerWidth - 20, playerX));
+            playerY = Math.max(0, Math.min(window.innerHeight - 20, playerY));
+
+            player.style.left = playerX + 'px';
+            player.style.top = playerY + 'px';
+        }
+
+        function spawnTarget() {
+            target.style.display = 'block';
+            target.style.left = Math.random() * (window.innerWidth - 20) + 'px';
+            target.style.top = Math.random() * (window.innerHeight - 20) + 'px';
+            resetTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            let baseTime = 10;
+            let minTime = 5;
+            let timeReduction = (baseTime - minTime) * (Math.min(currentLevel, 20) - 1) / 19;
+            let timeLeft = Math.max(baseTime - timeReduction, minTime);
+            
+            timerDisplay.textContent = timeLeft.toFixed(1);
+            
+            timer = setInterval(() => {
+                timeLeft -= 0.1;
+                timerDisplay.textContent = timeLeft.toFixed(1);
+                if (timeLeft <= 0) {
+                    alert('Game Over! You reached level ' + currentLevel);
+                    clearInterval(timer);
+                    target.style.display = 'none';
+                    player.style.display = 'none';
+                    startButton.parentElement.style.display = 'flex';
+                }
+            }, 100);  // Run every 100ms instead of 1000ms
+        }
+
+        function checkCollision() {
+            let playerRect = player.getBoundingClientRect();
+            let targetRect = target.getBoundingClientRect();
+
+            if (playerRect.left < targetRect.right &&
+                playerRect.right > targetRect.left &&
+                playerRect.top < targetRect.bottom &&
+                playerRect.bottom > targetRect.top) {
+                currentLevel++;
+                levelDisplay.textContent = currentLevel;
+                spawnTarget();
+            }
+        }
+
+        function setupControls() {
+            document.addEventListener('keydown', (e) => {
+                keys[e.key] = true;
+            });
+
+            document.addEventListener('keyup', (e) => {
+                keys[e.key] = false;
+            });
+        }
+    </script>
+</body>
+</html>
