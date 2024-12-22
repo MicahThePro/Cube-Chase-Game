@@ -31,9 +31,9 @@ cube-chase-game
 ```
 
 ## How to Run the Game
-1. Clone the repository.
-2. Navigate to the project directory.
-3. Open `src/index.html` in a web browser to start playing.
+1. Scroll to the top of the repository.
+2. Click on the link.
+3. You're ready to play!
 
 ## License
 This project is licensed under the MIT License.
