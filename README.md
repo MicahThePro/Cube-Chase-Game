@@ -60,8 +60,3 @@ Cube-Chase-Game/
 MIT License — You can use, remix, or even rage-quit from the game all you want. Just give some credit.
 
 ---
-
-WANNA MAKE IT CRAZIER? ADD MODES. ADD BOOSTS. MAKE THE CUBE GO *NYOOM*.
-BUT AS IT IS? IT’S CLEAN, FUN, AND A PERFECT HTML GAME FOR ANY PORTFOLIO.
-
-LET ME KNOW IF YOU WANT A MULTIPLAYER VERSION, POWER-UPS, OR TOUCH CONTROLS NEXT!
