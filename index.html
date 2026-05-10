@@ -542,7 +542,7 @@
                 name: 'Survival',
                 description: 'No round timer. Stay alive against relentless danger cubes and claw out the longest run.',
                 objective: 'Last as long as you can',
-                tags: ['3 lives', 'No timer pressure', 'Enemy-heavy chaos'],
+                tags: ['4 lives', 'No timer pressure', 'Enemy-heavy chaos'],
                 baseRoundTime: null,
                 minRoundTime: null,
                 totalTime: null,
@@ -969,7 +969,7 @@
                 game.time = Math.min(game.mode.totalTime, game.time + 0.75);
             }
 
-            if (selectedMode === 'classic' && game.score >= game.mode.winScore * 10) {
+            if (selectedMode === 'classic' && game.level > game.mode.winScore) {
                 endGame('Classic conquered!', `You cleared the full challenge in ${Math.round(game.elapsed)} seconds.`);
                 return;
             }
@@ -994,7 +994,7 @@
 
             if (game.lives <= 0) {
                 const label = selectedMode === 'survival' ? 'Survival over!' : 'Run over!';
-                endGame(label, `You made it to level ${Math.max(1, game.level - 1)}.`);
+                endGame(label, `You made it to level ${game.level}.`);
                 return;
             }
 
@@ -1097,7 +1097,7 @@
             hudRefs.objectiveLabel.textContent = game.mode.objective;
             hudRefs.scoreLabel.textContent = `${Math.floor(game.score)}`;
             hudRefs.bestLabel.textContent = `${bestScores[selectedMode] || 0}`;
-            hudRefs.levelLabel.textContent = `${Math.max(1, game.level - 1)}`;
+            hudRefs.levelLabel.textContent = `${game.level}`;
             hudRefs.streakLabel.textContent = `${game.streak}`;
             hudRefs.livesLabel.textContent = game.running || game.ended ? `${game.lives}` : `${game.mode.startingLives}`;
 
