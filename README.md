@@ -1,39 +1,35 @@
 # 🔴🟨 Cube Chase Game
 
-**Cube Chase Game** is a simple but surprisingly intense browser game where YOU, a lonely red cube, have to chase and touch the elusive yellow cube before time runs out. Each level gets harder, time gets tighter, and your reflexes get tested.
+**Cube Chase Game** is now a faster, flashier browser arcade game with three modes, power-ups, danger cubes, combo scoring, and touch controls for mobile play.
 
-WASD? Nope. Arrows. Smooth acceleration? Yup. Retro vibes with sleek modern mechanics? Absolutely.
+## 🚀 What's New
 
-## 🚀 Features
-
-* ⚡️ **Physics-Based Movement**
-  Velocity, friction, acceleration… it’s like a mini racing game inside a square.
-
-* ⏱️ **Dynamic Timer System**
-  Each level gives you less time. Go fast, or get embarrassed by a yellow square.
-
-* 🌯️ **Randomized Target Spawns**
-  No memorizing spawn points here. Every level's a new mini-challenge.
-
-* 🧠 **Progressive Difficulty**
-  Level 1 is chill. Level 20? Let’s just say you're gonna *feel it*.
-
-* 💥 **Instant Restart UI**
-  Clean full-screen start and retry experience.
+- 🎮 **Three Game Modes**
+  - **Classic**: beat a full target-chasing challenge with shrinking timers.
+  - **Rush**: score as many points as possible before the global clock expires.
+  - **Survival**: outlast aggressive danger cubes with a limited number of lives.
+- ⚡ **Dash + Power-Ups**
+  - Trigger a quick dash burst to escape danger.
+  - Collect speed, time, and life power-ups to extend your run.
+- 📱 **Mobile Support**
+  - Responsive fullscreen canvas.
+  - On-screen touch controls for phones and tablets.
+- 💥 **More Arcade Energy**
+  - Moving targets, particle bursts, streak tracking, local best scores, and escalating hazards.
 
 ## 🎮 How to Play
 
-1. Click **Start Game**.
-2. Use the arrow keys to move your cube.
-3. Reach the yellow target before the timer hits zero.
-4. Win? Level up. Lose? Try again.
-5. Brag to your friends when you reach level 10+.
+1. Open the game and choose a mode.
+2. Move with **Arrow Keys** or **WASD**.
+3. On mobile, use the on-screen D-pad.
+4. Press **Space** or tap **DASH** to burst forward.
+5. Collect the glowing yellow cube, avoid the purple danger cubes, and grab power-ups when they appear.
 
 ## 🛠️ Tech Stack
 
-* HTML5 + CSS3 (single page, full canvas)
-* Vanilla JavaScript (no libraries or frameworks)
-* Zero dependencies = lightning-fast load
+- HTML5 Canvas
+- CSS3
+- Vanilla JavaScript
 
 ## 🌐 Play Now
 
@@ -41,22 +37,20 @@ WASD? Nope. Arrows. Smooth acceleration? Yup. Retro vibes with sleek modern mech
 
 ## 📁 File Structure
 
-```
+```text
 Cube-Chase-Game/
-├── index.html   # Main game and logic in one page
-└── (no extra files—everything’s embedded!)
+├── index.html    # Main game, UI, styles, and logic
+├── README.md
+└── src/          # Earlier prototype files kept in the repo
 ```
 
-## 💡 Customization Ideas
+## 💡 Future Ideas
 
-* Change the cube colors in the CSS for your own aesthetic.
-* Adjust `SPEED`, `FRICTION`, or `MAX_SPEED` for your own gameplay feel.
-* Replace cubes with images for memes, characters, or chaos.
-* Add sound effects on collision or game over.
-* Add leaderboard support or scoring (easy to expand with localStorage or backend).
+- Add sound effects and music toggles.
+- Save per-mode stats like longest streak and survival time.
+- Add boss rounds or procedural obstacle layouts.
+- Add optional two-player chase battles.
 
 ## 🔒 License
 
-MIT License — You can use, remix, or even rage-quit from the game all you want. Just give some credit.
-
----
+MIT License
