@@ -564,6 +564,8 @@
 
         const STORAGE_KEY = 'cube-chase-best-scores-v2';
         const TWO_PI = Math.PI * 2;
+        const BOOST_GLOW_DIVISOR = 1.2;
+        const BOOST_GLOW_MULTIPLIER = 1.65;
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -1108,7 +1110,8 @@
             } else {
                 const cap = Math.max(1, game.mode.totalTime || game.roundTimeCap || 1);
                 const ratio = clamp(game.time / cap, 0, 1);
-                hudRefs.timeLabel.textContent = `${game.time.toFixed(1)}s · ${game.dashCharges} dash`;
+                const dashLabel = game.dashCharges === 1 ? 'dash' : 'dashes';
+                hudRefs.timeLabel.textContent = `${game.time.toFixed(1)}s · ${game.dashCharges} ${dashLabel}`;
                 hudRefs.timeFill.style.transform = `scaleX(${ratio})`;
                 hudRefs.timeFill.style.background = ratio < 0.35
                     ? 'linear-gradient(90deg, var(--danger), var(--warn))'
@@ -1165,7 +1168,14 @@
             ctx.fill();
             if (game.speedBoostTime > 0) {
                 ctx.fillStyle = 'rgba(110, 242, 255, 0.45)';
-                roundRect(ctx, -player.size / 1.2, -player.size / 1.2, player.size * 1.65, player.size * 1.65, 12);
+                roundRect(
+                    ctx,
+                    -player.size / BOOST_GLOW_DIVISOR,
+                    -player.size / BOOST_GLOW_DIVISOR,
+                    player.size * BOOST_GLOW_MULTIPLIER,
+                    player.size * BOOST_GLOW_MULTIPLIER,
+                    12
+                );
                 ctx.fill();
             }
             ctx.restore();
