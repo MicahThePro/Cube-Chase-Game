@@ -1,1306 +1,197 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Cube Chase Game</title>
     <style>
-        :root {
-            color-scheme: dark;
-            --bg: #07111f;
-            --panel: rgba(10, 19, 35, 0.78);
-            --panel-strong: rgba(12, 22, 40, 0.92);
-            --border: rgba(255, 255, 255, 0.12);
-            --text: #f8fbff;
-            --muted: #9fb4d6;
-            --accent: #6ef2ff;
-            --accent-2: #ff8f70;
-            --good: #73f59f;
-            --warn: #ffd166;
-            --danger: #ff5d7a;
-            --shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
-        }
-
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html,
-        body {
+        body, html {
+            margin: 0;
+            padding: 0;
             width: 100%;
             height: 100%;
-            margin: 0;
             overflow: hidden;
-            background:
-                radial-gradient(circle at top, rgba(110, 242, 255, 0.14), transparent 35%),
-                radial-gradient(circle at bottom, rgba(255, 143, 112, 0.12), transparent 25%),
-                var(--bg);
-            font-family: Inter, Arial, sans-serif;
-            color: var(--text);
-            touch-action: none;
         }
-
-        body {
-            position: relative;
-        }
-
-        canvas {
-            position: fixed;
-            inset: 0;
+        #gameArea {
             width: 100vw;
             height: 100vh;
-            display: block;
+            position: relative;
+            background: #f0f0f0;
         }
-
-        .hud,
-        .overlay,
-        .mobile-controls,
-        .toast {
+        #player {
+            width: 20px;
+            height: 20px;
+            background-color: red;
+            position: absolute;
+            display: none;
+        }
+        #target {
+            width: 20px;
+            height: 20px;
+            background-color: yellow;
+            position: absolute;
+            display: none;
+        }
+        #info {
             position: fixed;
-            z-index: 10;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
         }
-
-        .hud {
-            top: max(16px, env(safe-area-inset-top));
-            left: max(16px, env(safe-area-inset-left));
-            right: max(16px, env(safe-area-inset-right));
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            pointer-events: none;
-        }
-
-        .hud-panel {
-            min-width: 180px;
-            padding: 14px 16px;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(14px);
-        }
-
-        .hud-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px 16px;
-        }
-
-        .hud-label,
-        .mode-card p,
-        .subtle,
-        .controls-hint {
-            color: var(--muted);
-        }
-
-        .hud-value {
-            display: block;
-            margin-top: 2px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .progress-bar {
-            margin-top: 10px;
-            height: 10px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.08);
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
+        #startButtonContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            background: linear-gradient(90deg, var(--accent), var(--good));
-            transform-origin: left center;
-        }
-
-        .overlay {
-            inset: 0;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
-            background: rgba(3, 7, 14, 0.55);
-            backdrop-filter: blur(10px);
+            z-index: 99;
         }
-
-        .overlay-card {
-            width: min(960px, 100%);
-            max-height: min(90vh, 860px);
-            overflow: auto;
-            padding: 28px;
-            border-radius: 28px;
-            background: var(--panel-strong);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-        }
-
-        h1,
-        h2,
-        p {
-            margin: 0;
-        }
-
-        .overlay-header {
-            display: flex;
-            justify-content: space-between;
-            gap: 16px;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        }
-
-        .headline {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            width: fit-content;
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: rgba(110, 242, 255, 0.12);
-            color: var(--accent);
-            font-weight: 700;
-            letter-spacing: 0.02em;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-        }
-
-        .best-score {
-            text-align: right;
-        }
-
-        .best-score strong {
-            display: block;
-            margin-top: 6px;
-            font-size: 1.6rem;
-        }
-
-        .mode-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 14px;
-            margin: 22px 0;
-        }
-
-        .mode-card {
-            padding: 18px;
-            border-radius: 22px;
-            border: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.03);
+        #startButton {
+            padding: 15px 30px;
+            font-size: 24px;
             cursor: pointer;
-            transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background 0.3s;
         }
-
-        .mode-card:hover,
-        .mode-card:focus-visible,
-        .mode-card.active {
-            transform: translateY(-2px);
-            border-color: rgba(110, 242, 255, 0.6);
-            background: rgba(110, 242, 255, 0.09);
-            outline: none;
-        }
-
-        .mode-card h2 {
-            margin-bottom: 8px;
-            font-size: 1.1rem;
-        }
-
-        .chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .chip {
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.08);
-            font-size: 0.82rem;
-        }
-
-        .rules {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
-            margin-bottom: 22px;
-        }
-
-        .rule-card {
-            padding: 16px;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-        }
-
-        .rule-card strong {
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        .actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-
-        .button-row {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            border: 0;
-            border-radius: 16px;
-            padding: 14px 18px;
-            font: inherit;
-            font-weight: 700;
-            cursor: pointer;
-            color: var(--text);
-            background: rgba(255, 255, 255, 0.08);
-            transition: transform 0.16s ease, opacity 0.16s ease, background 0.16s ease;
-        }
-
-        button:hover,
-        button:focus-visible {
-            transform: translateY(-1px);
-            outline: none;
-        }
-
-        .primary-button {
-            background: linear-gradient(135deg, var(--accent), #37c2ff);
-            color: #03121d;
-        }
-
-        .secondary-button {
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .mobile-controls {
-            left: max(16px, env(safe-area-inset-left));
-            right: max(16px, env(safe-area-inset-right));
-            bottom: max(16px, env(safe-area-inset-bottom));
-            display: none;
-            justify-content: space-between;
-            align-items: flex-end;
-            gap: 16px;
-            pointer-events: none;
-        }
-
-        .mobile-controls.show {
-            display: flex;
-        }
-
-        .dpad {
-            display: grid;
-            grid-template-columns: repeat(3, 72px);
-            grid-template-rows: repeat(3, 72px);
-            gap: 8px;
-            pointer-events: auto;
-        }
-
-        .dpad button,
-        .boost-button {
-            background: rgba(8, 18, 34, 0.78);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(10px);
-            box-shadow: var(--shadow);
-            color: var(--text);
-            min-width: 72px;
-            min-height: 72px;
-            border-radius: 22px;
-            font-size: 1.4rem;
-            user-select: none;
-        }
-
-        .dpad .placeholder {
-            visibility: hidden;
-        }
-
-        .boost-button {
-            width: 92px;
-            height: 92px;
-            border-radius: 50%;
-            font-size: 1rem;
-            font-weight: 800;
-            color: var(--accent);
-            pointer-events: auto;
-        }
-
-        .toast {
-            left: 50%;
-            bottom: max(160px, calc(120px + env(safe-area-inset-bottom)));
-            transform: translateX(-50%);
-            padding: 12px 18px;
-            border-radius: 999px;
-            background: rgba(12, 22, 40, 0.92);
-            border: 1px solid var(--border);
-            color: var(--text);
-            box-shadow: var(--shadow);
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            pointer-events: none;
-        }
-
-        .toast.show {
-            opacity: 1;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        @media (max-width: 900px) {
-            .mode-grid,
-            .rules {
-                grid-template-columns: 1fr;
-            }
-
-            .overlay-header,
-            .actions,
-            .hud {
-                flex-direction: column;
-            }
-
-            .hud-panel {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 720px), (pointer: coarse) {
-            .mobile-controls.show {
-                display: flex;
-            }
-
-            .hud {
-                gap: 10px;
-            }
-
-            .overlay-card {
-                padding: 20px;
-            }
-
-            .best-score {
-                text-align: left;
-            }
+        #startButton:hover {
+            background: #45a049;
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-
-    <div class="hud hidden" id="hud">
-        <section class="hud-panel">
-            <div class="hud-grid">
-                <div>
-                    <span class="hud-label">Mode</span>
-                    <span class="hud-value" id="modeLabel">Classic</span>
-                </div>
-                <div>
-                    <span class="hud-label">Objective</span>
-                    <span class="hud-value" id="objectiveLabel">Reach 12 targets</span>
-                </div>
-                <div>
-                    <span class="hud-label">Score</span>
-                    <span class="hud-value" id="scoreLabel">0</span>
-                </div>
-                <div>
-                    <span class="hud-label">Best</span>
-                    <span class="hud-value" id="bestLabel">0</span>
-                </div>
-            </div>
-        </section>
-        <section class="hud-panel">
-            <div class="hud-grid">
-                <div>
-                    <span class="hud-label">Level</span>
-                    <span class="hud-value" id="levelLabel">1</span>
-                </div>
-                <div>
-                    <span class="hud-label">Streak</span>
-                    <span class="hud-value" id="streakLabel">0</span>
-                </div>
-                <div>
-                    <span class="hud-label">Time</span>
-                    <span class="hud-value" id="timeLabel">10.0s</span>
-                </div>
-                <div>
-                    <span class="hud-label">Lives</span>
-                    <span class="hud-value" id="livesLabel">3</span>
-                </div>
-            </div>
-            <div class="progress-bar" aria-hidden="true">
-                <div class="progress-fill" id="timeFill"></div>
-            </div>
-        </section>
+    <div id="info">
+        Level: <span id="level">1</span>
+        Time: <span id="timer">10.0</span>
     </div>
-
-    <div class="overlay" id="overlay">
-        <div class="overlay-card">
-            <div class="overlay-header">
-                <div class="headline">
-                    <span class="badge">New mobile-ready remix</span>
-                    <h1>Cube Chase Game just got turbo-charged.</h1>
-                    <p class="subtle">Pick a mode, chain combos, dodge danger cubes, and grab power-ups. Keyboard, touch, and mouse all work.</p>
-                </div>
-                <div class="best-score">
-                    <span class="subtle">Best run in this browser</span>
-                    <strong id="menuBestScore">0</strong>
-                </div>
-            </div>
-
-            <div class="mode-grid" id="modeGrid"></div>
-
-            <div class="rules">
-                <div class="rule-card">
-                    <strong>Controls</strong>
-                    <p>Arrow keys or WASD on desktop. Use the on-screen pad on phones and tablets.</p>
-                </div>
-                <div class="rule-card">
-                    <strong>Power-ups</strong>
-                    <p>Grab the blue bolt for speed, the gold clock for more time, and the green heart for extra survival.</p>
-                </div>
-                <div class="rule-card">
-                    <strong>Fun factor</strong>
-                    <p>Every target boosts streaks, ramps difficulty, and keeps the arena lively with roaming danger cubes.</p>
-                </div>
-            </div>
-
-            <div class="actions">
-                <p class="controls-hint" id="modeDescription">Classic mode is a fast level sprint with shrinking timers and rising pressure.</p>
-                <div class="button-row">
-                    <button class="secondary-button" id="howToButton">How to play</button>
-                    <button class="primary-button" id="startButton">Start run</button>
-                </div>
-            </div>
-        </div>
+    <div id="startButtonContainer">
+        <button id="startButton" onclick="startGame()">Start Game</button>
     </div>
-
-    <div class="mobile-controls" id="mobileControls" aria-label="Touch controls">
-        <div class="dpad">
-            <button class="placeholder" tabindex="-1" aria-hidden="true"></button>
-            <button data-dir="up" aria-label="Move up">▲</button>
-            <button class="placeholder" tabindex="-1" aria-hidden="true"></button>
-            <button data-dir="left" aria-label="Move left">◀</button>
-            <button class="placeholder" tabindex="-1" aria-hidden="true"></button>
-            <button data-dir="right" aria-label="Move right">▶</button>
-            <button class="placeholder" tabindex="-1" aria-hidden="true"></button>
-            <button data-dir="down" aria-label="Move down">▼</button>
-            <button class="placeholder" tabindex="-1" aria-hidden="true"></button>
-        </div>
-        <button class="boost-button" id="boostButton" aria-label="Dash burst">DASH</button>
+    <div id="gameArea">
+        <div id="player"></div>
+        <div id="target"></div>
     </div>
-
-    <div class="toast" id="toast"></div>
 
     <script>
-        const MODES = {
-            classic: {
-                name: 'Classic',
-                description: 'Sprint through escalating rounds. Each target drops the timer and adds new danger cubes.',
-                objective: 'Reach 12 targets',
-                tags: ['Level sprint', 'Shrinking timer', 'Best for first runs'],
-                baseRoundTime: 10,
-                minRoundTime: 4.2,
-                totalTime: null,
-                startingLives: 3,
-                winScore: 12,
-                hazardScale: 1,
-                targetJitter: 0.28,
-                scoreMultiplier: 1,
-                bonusTime: 3,
-                dashCharges: 3
-            },
-            rush: {
-                name: 'Rush',
-                description: 'A 45-second score attack. Chase huge streaks, chain bonus points, and keep momentum alive.',
-                objective: 'Score as high as possible',
-                tags: ['Score attack', 'Huge combos', 'Clock is always ticking'],
-                baseRoundTime: null,
-                minRoundTime: null,
-                totalTime: 45,
-                startingLives: 3,
-                winScore: null,
-                hazardScale: 1.35,
-                targetJitter: 0.42,
-                scoreMultiplier: 1.5,
-                bonusTime: 4,
-                dashCharges: 4
-            },
-            survival: {
-                name: 'Survival',
-                description: 'No round timer. Stay alive against relentless danger cubes and claw out the longest run.',
-                objective: 'Last as long as you can',
-                tags: ['4 lives', 'No timer pressure', 'Enemy-heavy chaos'],
-                baseRoundTime: null,
-                minRoundTime: null,
-                totalTime: null,
-                startingLives: 4,
-                winScore: null,
-                hazardScale: 1.75,
-                targetJitter: 0.5,
-                scoreMultiplier: 1.25,
-                bonusTime: 0,
-                dashCharges: 5
-            }
-        };
-
-        const POWERUPS = {
-            speed: { label: 'Speed boost!', color: '#6ef2ff' },
-            time: { label: '+Time bonus!', color: '#ffd166' },
-            life: { label: '+1 life!', color: '#73f59f' }
-        };
-
-        const STORAGE_KEY = 'cube-chase-best-scores-v2';
-        const TWO_PI = Math.PI * 2;
-        const BOOST_GLOW_DIVISOR = 1.2;
-        const BOOST_GLOW_MULTIPLIER = 1.65;
-
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const hud = document.getElementById('hud');
-        const overlay = document.getElementById('overlay');
-        const modeGrid = document.getElementById('modeGrid');
-        const modeDescription = document.getElementById('modeDescription');
-        const startButton = document.getElementById('startButton');
-        const howToButton = document.getElementById('howToButton');
-        const mobileControls = document.getElementById('mobileControls');
-        const boostButton = document.getElementById('boostButton');
-        const toast = document.getElementById('toast');
-        const menuBestScore = document.getElementById('menuBestScore');
-
-        const hudRefs = {
-            modeLabel: document.getElementById('modeLabel'),
-            objectiveLabel: document.getElementById('objectiveLabel'),
-            scoreLabel: document.getElementById('scoreLabel'),
-            bestLabel: document.getElementById('bestLabel'),
-            levelLabel: document.getElementById('levelLabel'),
-            streakLabel: document.getElementById('streakLabel'),
-            timeLabel: document.getElementById('timeLabel'),
-            livesLabel: document.getElementById('livesLabel'),
-            timeFill: document.getElementById('timeFill')
-        };
-
-        const bestScores = loadBestScores();
-        let selectedMode = 'classic';
-        let animationFrame = 0;
-        let lastTimestamp = 0;
-        let toastTimeout = 0;
-
-        const game = {
-            running: false,
-            ended: false,
-            message: '',
-            time: 0,
-            level: 1,
-            score: 0,
-            streak: 0,
-            lives: 3,
-            elapsed: 0,
-            mode: MODES.classic,
-            input: { up: false, down: false, left: false, right: false },
-            player: createPlayer(),
-            target: null,
-            powerup: null,
-            hazards: [],
-            particles: [],
-            dashCooldown: 0,
-            dashCharges: 0,
-            speedBoostTime: 0,
-            invulnerability: 0,
-            spawnGrace: 0,
-            roundTimeCap: 10,
-            arena: { width: window.innerWidth, height: window.innerHeight },
-            endStats: ''
-        };
-
-        renderModeCards();
-        updateMenuScores();
-        updateHud();
-        resizeCanvas();
-        renderFrame();
-
-        window.addEventListener('resize', resizeCanvas);
-        document.addEventListener('keydown', handleKeyChange(true));
-        document.addEventListener('keyup', handleKeyChange(false));
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && game.running) {
-                game.running = false;
-                showOverlay('Paused', 'Your run is waiting. Tap start to jump back in.');
-            }
-        });
-
-        modeGrid.addEventListener('click', (event) => {
-            const button = event.target.closest('[data-mode]');
-            if (!button) return;
-            selectMode(button.dataset.mode);
-        });
-
-        startButton.addEventListener('click', () => {
-            if (game.running) {
-                overlay.classList.add('hidden');
-                return;
-            }
-            startGame();
-        });
-
-        howToButton.addEventListener('click', () => {
-            showToast('Catch glowing cubes, avoid magenta danger, and use DASH to escape tight spots.');
-        });
-
-        boostButton.addEventListener('pointerdown', (event) => {
-            event.preventDefault();
-            triggerDash();
-        });
-
-        mobileControls.querySelectorAll('[data-dir]').forEach((button) => {
-            const direction = button.dataset.dir;
-            const activate = (value) => (event) => {
-                event.preventDefault();
-                game.input[direction] = value;
-            };
-            button.addEventListener('pointerdown', activate(true));
-            button.addEventListener('pointerup', activate(false));
-            button.addEventListener('pointerleave', activate(false));
-            button.addEventListener('pointercancel', activate(false));
-        });
-
-        function createPlayer() {
-            return {
-                x: 0,
-                y: 0,
-                vx: 0,
-                vy: 0,
-                size: 30,
-                acceleration: 0.7,
-                maxSpeed: 7,
-                friction: 0.86,
-                color: '#ff5d7a'
-            };
-        }
-
-        function renderModeCards() {
-            modeGrid.innerHTML = Object.entries(MODES).map(([key, mode]) => `
-                <button class="mode-card ${key === selectedMode ? 'active' : ''}" data-mode="${key}" type="button">
-                    <h2>${mode.name}</h2>
-                    <p>${mode.description}</p>
-                    <div class="chips">${mode.tags.map((tag) => `<span class="chip">${tag}</span>`).join('')}</div>
-                </button>
-            `).join('');
-            modeDescription.textContent = MODES[selectedMode].description;
-        }
-
-        function selectMode(modeKey) {
-            selectedMode = modeKey;
-            renderModeCards();
-            updateMenuScores();
-        }
-
-        function updateMenuScores() {
-            const best = bestScores[selectedMode] || 0;
-            menuBestScore.textContent = `${best}`;
-            hudRefs.bestLabel.textContent = `${best}`;
-        }
-
-        function loadBestScores() {
-            try {
-                const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-                return typeof parsed === 'object' && parsed ? parsed : {};
-            } catch (error) {
-                return {};
-            }
-        }
-
-        function saveBestScore(modeKey, value) {
-            const nextBest = Math.max(bestScores[modeKey] || 0, Math.floor(value));
-            bestScores[modeKey] = nextBest;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(bestScores));
-            updateMenuScores();
-            return nextBest;
-        }
+        let player = document.getElementById('player');
+        let target = document.getElementById('target');
+        let timerDisplay = document.getElementById('timer');
+        let levelDisplay = document.getElementById('level');
+        let startButton = document.getElementById('startButton');
+        let timer;
+        let currentLevel = 1;
+        let playerX = 0;
+        let playerY = 0;
+        let velocityX = 0;
+        let velocityY = 0;
+        const SPEED = 0.25;
+        const FRICTION = 0.88;
+        const MAX_SPEED = 4;
+        let keys = {};
 
         function startGame() {
-            game.mode = MODES[selectedMode];
-            game.running = true;
-            game.ended = false;
-            game.message = '';
-            game.endStats = '';
-            game.level = 1;
-            game.score = 0;
-            game.streak = 0;
-            game.elapsed = 0;
-            game.lives = game.mode.startingLives;
-            game.player = createPlayer();
-            game.player.x = game.arena.width / 2;
-            game.player.y = game.arena.height / 2;
-            game.time = game.mode.totalTime ?? game.mode.baseRoundTime ?? 0;
-            game.roundTimeCap = game.time || 1;
-            game.powerup = null;
-            game.hazards = [];
-            game.particles = [];
-            game.dashCooldown = 0;
-            game.dashCharges = game.mode.dashCharges;
-            game.speedBoostTime = 0;
-            game.invulnerability = 0;
-            game.spawnGrace = 1.2;
+            currentLevel = 1;
+            levelDisplay.textContent = currentLevel;
+            startButton.parentElement.style.display = 'none';
+            
+            playerX = (window.innerWidth - 20) / 2;
+            playerY = (window.innerHeight - 20) / 2;
+            player.style.left = playerX + 'px';
+            player.style.top = playerY + 'px';
+            player.style.display = 'block';
+            
+            velocityX = 0;
+            velocityY = 0;
             spawnTarget();
-            spawnHazards();
-            overlay.classList.add('hidden');
-            hud.classList.remove('hidden');
-            mobileControls.classList.add('show');
-            showToast(`${game.mode.name} started!`);
-            cancelAnimationFrame(animationFrame);
-            lastTimestamp = 0;
-            animationFrame = requestAnimationFrame(loop);
-            updateHud();
+            setupControls();
+            gameLoop();
         }
 
-        function endGame(title, detail) {
-            game.running = false;
-            game.ended = true;
-            const best = saveBestScore(selectedMode, game.score);
-            game.endStats = `${detail} Final score: ${Math.floor(game.score)} · Best: ${best}`;
-            showOverlay(title, game.endStats);
-            mobileControls.classList.remove('show');
-            updateHud();
+        function gameLoop() {
+            updatePlayerPosition();
+            checkCollision();
+            requestAnimationFrame(gameLoop);
         }
 
-        function showOverlay(title, detail) {
-            overlay.classList.remove('hidden');
-            startButton.textContent = game.ended ? 'Play again' : 'Resume / start';
-            document.querySelector('.headline h1').textContent = title;
-            document.querySelector('.headline .subtle').textContent = detail;
-        }
+        function updatePlayerPosition() {
+            if (keys['ArrowLeft']) velocityX -= SPEED;
+            if (keys['ArrowRight']) velocityX += SPEED;
+            if (keys['ArrowUp']) velocityY -= SPEED;
+            if (keys['ArrowDown']) velocityY += SPEED;
 
-        function showToast(message) {
-            clearTimeout(toastTimeout);
-            toast.textContent = message;
-            toast.classList.add('show');
-            toastTimeout = window.setTimeout(() => toast.classList.remove('show'), 1600);
-        }
+            velocityX *= FRICTION;
+            velocityY *= FRICTION;
 
-        function resizeCanvas() {
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = Math.round(window.innerWidth * dpr);
-            canvas.height = Math.round(window.innerHeight * dpr);
-            canvas.style.width = `${window.innerWidth}px`;
-            canvas.style.height = `${window.innerHeight}px`;
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            game.arena.width = window.innerWidth;
-            game.arena.height = window.innerHeight;
-            if (game.player) {
-                game.player.x = clamp(game.player.x, game.player.size / 2, game.arena.width - game.player.size / 2);
-                game.player.y = clamp(game.player.y, 120, game.arena.height - game.player.size / 2);
-            }
-            if (game.target) {
-                game.target.x = clamp(game.target.x, game.target.size, game.arena.width - game.target.size);
-                game.target.y = clamp(game.target.y, 130, game.arena.height - game.target.size);
-            }
-        }
+            velocityX = Math.max(Math.min(velocityX, MAX_SPEED), -MAX_SPEED);
+            velocityY = Math.max(Math.min(velocityY, MAX_SPEED), -MAX_SPEED);
 
-        function loop(timestamp) {
-            if (!game.running) {
-                renderFrame();
-                return;
-            }
+            playerX += velocityX;
+            playerY += velocityY;
 
-            if (!lastTimestamp) lastTimestamp = timestamp;
-            const delta = Math.min((timestamp - lastTimestamp) / 1000, 0.032);
-            lastTimestamp = timestamp;
+            playerX = Math.max(0, Math.min(window.innerWidth - 20, playerX));
+            playerY = Math.max(0, Math.min(window.innerHeight - 20, playerY));
 
-            update(delta);
-            renderFrame();
-            animationFrame = requestAnimationFrame(loop);
-        }
-
-        function update(delta) {
-            game.elapsed += delta;
-            game.invulnerability = Math.max(0, game.invulnerability - delta);
-            game.spawnGrace = Math.max(0, game.spawnGrace - delta);
-            game.dashCooldown = Math.max(0, game.dashCooldown - delta);
-            game.speedBoostTime = Math.max(0, game.speedBoostTime - delta);
-
-            if (game.mode.totalTime) {
-                game.time = Math.max(0, game.time - delta);
-                if (game.time === 0) {
-                    endGame('Rush complete!', `You survived the full sprint with a ${game.streak} streak peak.`);
-                    return;
-                }
-            } else if (game.mode.baseRoundTime && game.time > 0) {
-                game.time = Math.max(0, game.time - delta);
-                if (game.time === 0) {
-                    loseLife('Out of time!');
-                    return;
-                }
-            }
-
-            updatePlayer(delta);
-            updateTarget(delta);
-            updateHazards(delta);
-            updatePowerup(delta);
-            updateParticles(delta);
-            handleCollisions();
-            updateHud();
-        }
-
-        function updatePlayer(delta) {
-            const player = game.player;
-            const boostFactor = game.speedBoostTime > 0 ? 1.25 : 1;
-            const acceleration = player.acceleration * boostFactor;
-            const maxSpeed = player.maxSpeed * boostFactor;
-
-            if (game.input.left) player.vx -= acceleration;
-            if (game.input.right) player.vx += acceleration;
-            if (game.input.up) player.vy -= acceleration;
-            if (game.input.down) player.vy += acceleration;
-
-            player.vx *= Math.pow(player.friction, delta * 60);
-            player.vy *= Math.pow(player.friction, delta * 60);
-            player.vx = clamp(player.vx, -maxSpeed, maxSpeed);
-            player.vy = clamp(player.vy, -maxSpeed, maxSpeed);
-
-            player.x += player.vx * delta * 60;
-            player.y += player.vy * delta * 60;
-
-            const minY = 110;
-            player.x = clamp(player.x, player.size / 2, game.arena.width - player.size / 2);
-            player.y = clamp(player.y, minY, game.arena.height - player.size / 2);
-        }
-
-        function updateTarget(delta) {
-            if (!game.target) return;
-            game.target.pulse += delta * 4;
-            const radius = 12 + game.mode.targetJitter * 18;
-            game.target.offsetX = Math.cos(game.target.pulse) * radius;
-            game.target.offsetY = Math.sin(game.target.pulse * 1.2) * radius;
-        }
-
-        function updateHazards(delta) {
-            for (const hazard of game.hazards) {
-                hazard.x += hazard.vx * delta * 60;
-                hazard.y += hazard.vy * delta * 60;
-
-                const bufferTop = 118;
-                if (hazard.x < hazard.size || hazard.x > game.arena.width - hazard.size) {
-                    hazard.vx *= -1;
-                }
-                if (hazard.y < bufferTop || hazard.y > game.arena.height - hazard.size) {
-                    hazard.vy *= -1;
-                }
-
-                if (selectedMode === 'survival') {
-                    const angle = Math.atan2(game.player.y - hazard.y, game.player.x - hazard.x);
-                    hazard.vx += Math.cos(angle) * 0.02;
-                    hazard.vy += Math.sin(angle) * 0.02;
-                    const speedCap = hazard.baseSpeed * 1.6;
-                    hazard.vx = clamp(hazard.vx, -speedCap, speedCap);
-                    hazard.vy = clamp(hazard.vy, -speedCap, speedCap);
-                }
-            }
-        }
-
-        function updatePowerup(delta) {
-            if (!game.powerup) return;
-            game.powerup.life -= delta;
-            game.powerup.pulse += delta * 7;
-            if (game.powerup.life <= 0) {
-                game.powerup = null;
-            }
-        }
-
-        function updateParticles(delta) {
-            game.particles = game.particles.filter((particle) => {
-                particle.life -= delta;
-                particle.x += particle.vx * delta * 60;
-                particle.y += particle.vy * delta * 60;
-                particle.vx *= 0.98;
-                particle.vy *= 0.98;
-                return particle.life > 0;
-            });
-        }
-
-        function handleCollisions() {
-            const target = game.target;
-            if (target && circleHit(game.player, { x: target.x + target.offsetX, y: target.y + target.offsetY, size: target.size })) {
-                collectTarget();
-            }
-
-            if (game.powerup && circleHit(game.player, game.powerup)) {
-                applyPowerup(game.powerup.type);
-                game.powerup = null;
-            }
-
-            if (game.invulnerability <= 0 && game.spawnGrace <= 0) {
-                for (const hazard of game.hazards) {
-                    if (circleHit(game.player, hazard)) {
-                        loseLife('A danger cube clipped you!');
-                        break;
-                    }
-                }
-            }
-        }
-
-        function collectTarget() {
-            const bonus = 10 + game.streak * 2;
-            const multiplier = selectedMode === 'rush' ? 1 + Math.min(game.streak, 10) * 0.08 : game.mode.scoreMultiplier;
-            game.score += Math.round(bonus * multiplier);
-            game.streak += 1;
-            game.level += 1;
-            game.dashCharges = Math.min(game.mode.dashCharges + 2, game.dashCharges + 1);
-            burstParticles(game.target.x, game.target.y, '#ffd166', 18);
-
-            if (selectedMode === 'classic') {
-                const nextTime = Math.max(
-                    game.mode.baseRoundTime - Math.min(game.level - 1, 18) * 0.35,
-                    game.mode.minRoundTime
-                );
-                game.time = nextTime;
-                game.roundTimeCap = nextTime;
-            } else if (selectedMode === 'rush') {
-                game.time = Math.min(game.mode.totalTime, game.time + 0.75);
-            }
-
-            if (selectedMode === 'classic' && game.level > game.mode.winScore) {
-                endGame('Classic conquered!', `You cleared the full challenge in ${Math.round(game.elapsed)} seconds.`);
-                return;
-            }
-
-            if ((game.level - 1) % 3 === 0) {
-                spawnHazards();
-            }
-            if (game.streak % 4 === 0) {
-                spawnPowerup();
-            }
-            spawnTarget();
-            showToast(game.streak > 1 ? `${game.streak}x streak!` : 'Nice catch!');
-        }
-
-        function loseLife(reason) {
-            game.lives -= 1;
-            game.streak = 0;
-            game.invulnerability = 1.6;
-            game.spawnGrace = 1;
-            burstParticles(game.player.x, game.player.y, '#ff5d7a', 22);
-            showToast(reason);
-
-            if (game.lives <= 0) {
-                const label = selectedMode === 'survival' ? 'Survival over!' : 'Run over!';
-                endGame(label, `You made it to level ${game.level}.`);
-                return;
-            }
-
-            if (selectedMode === 'classic') {
-                const resetTime = Math.max(game.mode.baseRoundTime - Math.min(game.level - 1, 18) * 0.25, game.mode.minRoundTime);
-                game.time = resetTime;
-                game.roundTimeCap = resetTime;
-            } else if (selectedMode === 'rush') {
-                game.time = Math.max(0, game.time - 3.5);
-            }
-
-            game.player.x = game.arena.width / 2;
-            game.player.y = Math.max(150, game.arena.height / 2);
-            game.player.vx = 0;
-            game.player.vy = 0;
+            player.style.left = playerX + 'px';
+            player.style.top = playerY + 'px';
         }
 
         function spawnTarget() {
-            const margin = 70;
-            game.target = {
-                x: randomBetween(margin, game.arena.width - margin),
-                y: randomBetween(150, game.arena.height - margin),
-                size: 18,
-                pulse: Math.random() * TWO_PI,
-                offsetX: 0,
-                offsetY: 0
-            };
+            target.style.display = 'block';
+            target.style.left = Math.random() * (window.innerWidth - 20) + 'px';
+            target.style.top = Math.random() * (window.innerHeight - 20) + 'px';
+            resetTimer();
         }
 
-        function spawnHazards() {
-            const desiredCount = Math.min(
-                selectedMode === 'survival' ? 4 + Math.floor(game.level / 2) : 2 + Math.floor(game.level / 3),
-                selectedMode === 'survival' ? 8 : 6
-            );
-
-            while (game.hazards.length < desiredCount) {
-                const baseSpeed = randomBetween(1.4, 2.6) * game.mode.hazardScale;
-                const angle = Math.random() * TWO_PI;
-                game.hazards.push({
-                    x: randomBetween(50, game.arena.width - 50),
-                    y: randomBetween(140, game.arena.height - 50),
-                    size: randomBetween(16, 22),
-                    baseSpeed,
-                    vx: Math.cos(angle) * baseSpeed,
-                    vy: Math.sin(angle) * baseSpeed,
-                    color: '#bd4bff'
-                });
-            }
-        }
-
-        function spawnPowerup() {
-            const options = ['speed', 'time'];
-            if (selectedMode === 'survival' || game.lives < game.mode.startingLives) {
-                options.push('life');
-            }
-            const type = options[Math.floor(Math.random() * options.length)];
-            game.powerup = {
-                type,
-                x: randomBetween(70, game.arena.width - 70),
-                y: randomBetween(160, game.arena.height - 70),
-                size: 16,
-                life: 8,
-                pulse: 0
-            };
-        }
-
-        function applyPowerup(type) {
-            burstParticles(game.powerup.x, game.powerup.y, POWERUPS[type].color, 16);
-            if (type === 'speed') {
-                game.speedBoostTime = 6;
-            } else if (type === 'time' && selectedMode !== 'survival') {
-                const bonus = game.mode.bonusTime;
-                game.time += bonus;
-                game.roundTimeCap = Math.max(game.roundTimeCap, game.time);
-            } else if (type === 'life') {
-                game.lives += 1;
-            }
-            showToast(POWERUPS[type].label);
-        }
-
-        function triggerDash() {
-            if (!game.running || game.dashCooldown > 0 || game.dashCharges <= 0) return;
-            const player = game.player;
-            const horizontal = Number(game.input.right) - Number(game.input.left);
-            const vertical = Number(game.input.down) - Number(game.input.up);
-            const hasInput = horizontal !== 0 || vertical !== 0;
-            const angle = hasInput ? Math.atan2(vertical, horizontal) : Math.atan2(player.vy || 0.1, player.vx || 1);
-            const dashPower = 16;
-            player.vx += Math.cos(angle) * dashPower;
-            player.vy += Math.sin(angle) * dashPower;
-            game.dashCharges -= 1;
-            game.dashCooldown = 1.2;
-            game.invulnerability = Math.max(game.invulnerability, 0.35);
-            burstParticles(player.x, player.y, '#6ef2ff', 14);
-            showToast(`Dash! ${game.dashCharges} charge${game.dashCharges === 1 ? '' : 's'} left.`);
-        }
-
-        function updateHud() {
-            hudRefs.modeLabel.textContent = game.mode.name;
-            hudRefs.objectiveLabel.textContent = game.mode.objective;
-            hudRefs.scoreLabel.textContent = `${Math.floor(game.score)}`;
-            hudRefs.bestLabel.textContent = `${bestScores[selectedMode] || 0}`;
-            hudRefs.levelLabel.textContent = `${game.level}`;
-            hudRefs.streakLabel.textContent = `${game.streak}`;
-            hudRefs.livesLabel.textContent = game.running || game.ended ? `${game.lives}` : `${game.mode.startingLives}`;
-
-            if (selectedMode === 'survival') {
-                hudRefs.timeLabel.textContent = `${Math.round(game.elapsed)}s`;
-                hudRefs.timeFill.style.transform = 'scaleX(1)';
-                hudRefs.timeFill.style.background = 'linear-gradient(90deg, var(--good), var(--accent))';
-            } else {
-                const cap = Math.max(1, game.mode.totalTime || game.roundTimeCap || 1);
-                const ratio = clamp(game.time / cap, 0, 1);
-                const dashLabel = game.dashCharges === 1 ? 'dash' : 'dashes';
-                hudRefs.timeLabel.textContent = `${game.time.toFixed(1)}s · ${game.dashCharges} ${dashLabel}`;
-                hudRefs.timeFill.style.transform = `scaleX(${ratio})`;
-                hudRefs.timeFill.style.background = ratio < 0.35
-                    ? 'linear-gradient(90deg, var(--danger), var(--warn))'
-                    : 'linear-gradient(90deg, var(--accent), var(--good))';
-            }
-        }
-
-        function renderFrame() {
-            const width = game.arena.width;
-            const height = game.arena.height;
-            ctx.clearRect(0, 0, width, height);
-            drawBackground(width, height);
-            if (!game.target && !game.running && !game.ended) return;
-            if (game.target) drawTarget();
-            drawHazards();
-            if (game.powerup) drawPowerup();
-            drawParticles();
-            drawPlayer();
-            drawArenaHints(width, height);
-        }
-
-        function drawBackground(width, height) {
-            const gradient = ctx.createLinearGradient(0, 0, 0, height);
-            gradient.addColorStop(0, '#091524');
-            gradient.addColorStop(1, '#040b14');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, width, height);
-
-            ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-            ctx.lineWidth = 1;
-            for (let x = 0; x < width; x += 48) {
-                ctx.beginPath();
-                ctx.moveTo(x, 100);
-                ctx.lineTo(x, height);
-                ctx.stroke();
-            }
-            for (let y = 100; y < height; y += 48) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(width, y);
-                ctx.stroke();
-            }
-        }
-
-        function drawPlayer() {
-            const { player } = game;
-            ctx.save();
-            ctx.translate(player.x, player.y);
-            ctx.rotate(Math.atan2(player.vy, player.vx || 1) * 0.2);
-            ctx.fillStyle = game.invulnerability > 0 ? '#ff91a5' : player.color;
-            ctx.shadowColor = player.color;
-            ctx.shadowBlur = 24;
-            roundRect(ctx, -player.size / 2, -player.size / 2, player.size, player.size, 8);
-            ctx.fill();
-            if (game.speedBoostTime > 0) {
-                ctx.fillStyle = 'rgba(110, 242, 255, 0.45)';
-                roundRect(
-                    ctx,
-                    -player.size / BOOST_GLOW_DIVISOR,
-                    -player.size / BOOST_GLOW_DIVISOR,
-                    player.size * BOOST_GLOW_MULTIPLIER,
-                    player.size * BOOST_GLOW_MULTIPLIER,
-                    12
-                );
-                ctx.fill();
-            }
-            ctx.restore();
-        }
-
-        function drawTarget() {
-            const targetX = game.target.x + game.target.offsetX;
-            const targetY = game.target.y + game.target.offsetY;
-            const glow = 10 + (Math.sin(game.target.pulse) + 1) * 5;
-            ctx.save();
-            ctx.fillStyle = '#ffd166';
-            ctx.shadowColor = '#ffd166';
-            ctx.shadowBlur = 28 + glow;
-            roundRect(ctx, targetX - game.target.size, targetY - game.target.size, game.target.size * 2, game.target.size * 2, 10);
-            ctx.fill();
-            ctx.restore();
-        }
-
-        function drawHazards() {
-            for (const hazard of game.hazards) {
-                ctx.save();
-                ctx.fillStyle = hazard.color;
-                ctx.shadowColor = hazard.color;
-                ctx.shadowBlur = 22;
-                roundRect(ctx, hazard.x - hazard.size, hazard.y - hazard.size, hazard.size * 2, hazard.size * 2, 8);
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        function drawPowerup() {
-            const powerup = game.powerup;
-            const meta = POWERUPS[powerup.type];
-            const scale = 1 + Math.sin(powerup.pulse) * 0.08;
-            ctx.save();
-            ctx.translate(powerup.x, powerup.y);
-            ctx.scale(scale, scale);
-            ctx.fillStyle = meta.color;
-            ctx.shadowColor = meta.color;
-            ctx.shadowBlur = 24;
-            ctx.beginPath();
-            ctx.arc(0, 0, powerup.size, 0, TWO_PI);
-            ctx.fill();
-            ctx.fillStyle = '#03121d';
-            ctx.font = 'bold 13px Inter, Arial, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(powerup.type === 'speed' ? '⚡' : powerup.type === 'time' ? '⏱' : '❤', 0, 1);
-            ctx.restore();
-        }
-
-        function drawParticles() {
-            for (const particle of game.particles) {
-                ctx.save();
-                ctx.globalAlpha = clamp(particle.life / particle.maxLife, 0, 1);
-                ctx.fillStyle = particle.color;
-                ctx.beginPath();
-                ctx.arc(particle.x, particle.y, particle.size, 0, TWO_PI);
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        function drawArenaHints(width, height) {
-            ctx.fillStyle = 'rgba(255,255,255,0.75)';
-            ctx.font = '600 14px Inter, Arial, sans-serif';
-            ctx.fillText(`Dodge the purple danger cubes • Grab power-ups • Mode: ${game.mode.name}`, 18, height - 22);
-        }
-
-        function burstParticles(x, y, color, count) {
-            for (let index = 0; index < count; index += 1) {
-                const angle = Math.random() * TWO_PI;
-                const speed = randomBetween(1, 5);
-                const maxLife = randomBetween(0.35, 0.8);
-                game.particles.push({
-                    x,
-                    y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    color,
-                    size: randomBetween(2, 4),
-                    life: maxLife,
-                    maxLife
-                });
-            }
-        }
-
-        function handleKeyChange(isDown) {
-            return (event) => {
-                if (event.repeat && isDown) return;
-                const key = event.key.toLowerCase();
-                if (key === 'arrowleft' || key === 'a') game.input.left = isDown;
-                if (key === 'arrowright' || key === 'd') game.input.right = isDown;
-                if (key === 'arrowup' || key === 'w') game.input.up = isDown;
-                if (key === 'arrowdown' || key === 's') game.input.down = isDown;
-                if (key === ' ' && isDown) {
-                    event.preventDefault();
-                    triggerDash();
+        function resetTimer() {
+            clearInterval(timer);
+            let baseTime = 10;
+            let minTime = 5;
+            let timeReduction = (baseTime - minTime) * (Math.min(currentLevel, 20) - 1) / 19;
+            let timeLeft = Math.max(baseTime - timeReduction, minTime);
+            
+            timerDisplay.textContent = timeLeft.toFixed(1);
+            
+            timer = setInterval(() => {
+                timeLeft -= 0.1;
+                timerDisplay.textContent = timeLeft.toFixed(1);
+                if (timeLeft <= 0) {
+                    alert('Game Over! You reached level ' + currentLevel);
+                    clearInterval(timer);
+                    target.style.display = 'none';
+                    player.style.display = 'none';
+                    startButton.parentElement.style.display = 'flex';
                 }
-            };
+            }, 100);  // Run every 100ms instead of 1000ms
         }
 
-        function circleHit(a, b) {
-            const dx = a.x - b.x;
-            const dy = a.y - b.y;
-            const distance = Math.hypot(dx, dy);
-            return distance < (a.size || 0) + (b.size || 0);
+        function checkCollision() {
+            let playerRect = player.getBoundingClientRect();
+            let targetRect = target.getBoundingClientRect();
+
+            if (playerRect.left < targetRect.right &&
+                playerRect.right > targetRect.left &&
+                playerRect.top < targetRect.bottom &&
+                playerRect.bottom > targetRect.top) {
+                currentLevel++;
+                levelDisplay.textContent = currentLevel;
+                spawnTarget();
+            }
         }
 
-        function randomBetween(min, max) {
-            return Math.random() * (max - min) + min;
-        }
+        function setupControls() {
+            document.addEventListener('keydown', (e) => {
+                keys[e.key] = true;
+            });
 
-        function clamp(value, min, max) {
-            return Math.min(max, Math.max(min, value));
-        }
-
-        function roundRect(context, x, y, width, height, radius) {
-            context.beginPath();
-            context.moveTo(x + radius, y);
-            context.arcTo(x + width, y, x + width, y + height, radius);
-            context.arcTo(x + width, y + height, x, y + height, radius);
-            context.arcTo(x, y + height, x, y, radius);
-            context.arcTo(x, y, x + width, y, radius);
-            context.closePath();
+            document.addEventListener('keyup', (e) => {
+                keys[e.key] = false;
+            });
         }
     </script>
 </body>
